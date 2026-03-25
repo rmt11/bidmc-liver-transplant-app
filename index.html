@@ -1,0 +1,1938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BIDMC Liver Transplant App - Screen Generator</title>
+<style>
+/* ========== RESET & BASE ========== */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; background: #f0f2f5; color: #1a1a1a; }
+
+/* ========== DESIGN TOKENS (from Figma) ========== */
+:root {
+  --navy-dark: #1B3A5C;
+  --navy-mid: #234B73;
+  --navy-light: #2E6B9C;
+  --blue-header: linear-gradient(135deg, #1B3A5C 0%, #2E6B9C 100%);
+  --teal-btn: #2196A4;
+  --teal-btn-hover: #1a7a86;
+  --orange-accent: #E8903E;
+  --orange-light: #F5A623;
+  --white: #FFFFFF;
+  --off-white: #F8F9FA;
+  --gray-100: #F1F3F5;
+  --gray-200: #E9ECEF;
+  --gray-300: #DEE2E6;
+  --gray-500: #868E96;
+  --gray-700: #495057;
+  --gray-900: #212529;
+  --text-primary: #1a1a1a;
+  --text-secondary: #495057;
+  --card-shadow: 0 2px 12px rgba(0,0,0,0.08);
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --phone-width: 375px;
+  --phone-height: 812px;
+}
+
+/* ========== LAYOUT ========== */
+.app-container {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ========== SIDEBAR ========== */
+.sidebar {
+  width: 320px;
+  min-width: 320px;
+  background: var(--navy-dark);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+}
+.sidebar-header {
+  padding: 20px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+.sidebar-header h1 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 4px;
+}
+.sidebar-header p {
+  font-size: 11px;
+  color: rgba(255,255,255,0.6);
+}
+.sidebar-section {
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.sidebar-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.4);
+  padding: 8px 20px 4px;
+}
+.sidebar-item {
+  display: flex;
+  align-items: center;
+  padding: 10px 20px;
+  cursor: pointer;
+  transition: background 0.15s;
+  font-size: 13px;
+  gap: 10px;
+  position: relative;
+}
+.sidebar-item:hover { background: rgba(255,255,255,0.06); }
+.sidebar-item.active { background: rgba(255,255,255,0.12); }
+.sidebar-item.active::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--orange-accent);
+  border-radius: 0 2px 2px 0;
+}
+.sidebar-item .dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.dot.done { background: #51CF66; }
+.dot.existing { background: var(--orange-accent); }
+.dot.pending { background: var(--gray-500); }
+.sidebar-item .label { flex: 1; line-height: 1.3; }
+.sidebar-item .badge {
+  font-size: 9px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+.badge.built { background: rgba(81,207,102,0.2); color: #51CF66; }
+.badge.new { background: rgba(232,144,62,0.2); color: var(--orange-accent); }
+
+/* ========== MAIN CONTENT ========== */
+.main-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Toolbar */
+.toolbar {
+  display: flex;
+  align-items: center;
+  padding: 12px 24px;
+  background: white;
+  border-bottom: 1px solid var(--gray-200);
+  gap: 12px;
+  flex-shrink: 0;
+}
+.toolbar-title {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--gray-700);
+}
+.toolbar-btn {
+  padding: 6px 14px;
+  font-size: 12px;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.15s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.toolbar-btn.primary {
+  background: var(--navy-dark);
+  color: white;
+}
+.toolbar-btn.primary:hover { background: var(--navy-mid); }
+.toolbar-btn.secondary {
+  background: var(--gray-100);
+  color: var(--gray-700);
+  border: 1px solid var(--gray-300);
+}
+.toolbar-btn.secondary:hover { background: var(--gray-200); }
+.toolbar-btn.export-btn {
+  background: var(--teal-btn);
+  color: white;
+}
+.toolbar-btn.export-btn:hover { background: var(--teal-btn-hover); }
+
+/* Preview Area */
+.preview-area {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 30px;
+  overflow-y: auto;
+  background: var(--gray-100);
+}
+
+/* ========== PHONE FRAME ========== */
+.phone-frame {
+  width: var(--phone-width);
+  min-height: var(--phone-height);
+  background: white;
+  border-radius: 40px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.15), 0 0 0 8px #1a1a1a;
+  overflow: hidden;
+  position: relative;
+  flex-shrink: 0;
+}
+.phone-notch {
+  position: absolute;
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 150px;
+  height: 30px;
+  background: #1a1a1a;
+  border-radius: 0 0 18px 18px;
+  z-index: 10;
+}
+.phone-status-bar {
+  height: 50px;
+  background: var(--navy-dark);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 24px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+.phone-status-bar .time { font-size: 14px; font-weight: 700; }
+.phone-status-bar .icons { display: flex; gap: 4px; font-size: 11px; }
+
+/* ========== SCREEN STYLES (matching Figma) ========== */
+.screen-content {
+  min-height: calc(var(--phone-height) - 50px);
+  overflow-y: auto;
+  max-height: calc(var(--phone-height) - 50px);
+}
+
+/* Nav bar */
+.screen-nav {
+  background: linear-gradient(135deg, var(--navy-dark), var(--navy-mid));
+  padding: 14px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+.screen-nav .back-arrow {
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.screen-nav .nav-title {
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  flex: 1;
+  text-align: center;
+  padding-right: 28px;
+}
+
+/* Breadcrumb */
+.screen-breadcrumb {
+  padding: 12px 20px 0;
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+/* Page Title */
+.screen-title {
+  padding: 8px 20px 16px;
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.25;
+}
+
+/* Image Placeholder */
+.screen-image {
+  margin: 0 20px 16px;
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+  border-radius: var(--radius-md);
+  height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+.screen-image .expand-icon {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  color: white;
+  font-size: 16px;
+  opacity: 0.7;
+}
+.screen-image .placeholder-text {
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+  text-align: center;
+  padding: 20px;
+}
+.screen-image-caption {
+  padding: 0 20px 16px;
+  font-size: 12px;
+  color: var(--gray-500);
+}
+
+/* Body text */
+.screen-body {
+  padding: 0 20px 16px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+.screen-body p { margin-bottom: 12px; }
+.screen-body strong { font-weight: 600; }
+.screen-body em { font-style: italic; color: var(--text-secondary); }
+
+/* Bullet list */
+.screen-bullets {
+  padding: 0 20px 16px;
+  list-style: none;
+}
+.screen-bullets li {
+  position: relative;
+  padding-left: 20px;
+  margin-bottom: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+.screen-bullets li::before {
+  content: '\2022';
+  position: absolute;
+  left: 4px;
+  top: 0;
+  color: var(--navy-mid);
+  font-size: 18px;
+  font-weight: 700;
+}
+
+/* Tab Pills */
+.screen-tabs {
+  padding: 0 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.screen-tab {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: var(--gray-100);
+  border-radius: var(--radius-sm);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.screen-tab:hover { background: var(--gray-200); }
+.screen-tab.active {
+  background: var(--navy-dark);
+  color: white;
+}
+.screen-tab .chevron { font-size: 16px; opacity: 0.5; }
+
+/* Info Card (dark navy) */
+.screen-info-card {
+  margin: 0 16px 16px;
+  background: linear-gradient(135deg, var(--navy-dark), #1e3a5f);
+  border-radius: var(--radius-md);
+  padding: 20px;
+  color: white;
+}
+.screen-info-card h4 {
+  font-size: 15px;
+  font-weight: 700;
+  margin-bottom: 10px;
+  color: white;
+}
+.screen-info-card h5 {
+  font-size: 13px;
+  font-weight: 700;
+  margin-top: 12px;
+  margin-bottom: 6px;
+  color: var(--orange-accent);
+}
+.screen-info-card p {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 8px;
+}
+.screen-info-card ul {
+  margin: 8px 0;
+  padding-left: 18px;
+}
+.screen-info-card li {
+  font-size: 13px;
+  line-height: 1.5;
+  color: rgba(255,255,255,0.85);
+  margin-bottom: 4px;
+}
+
+/* Accordion */
+.screen-accordion {
+  margin: 0 16px 16px;
+  background: var(--gray-100);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+.accordion-item {
+  border-bottom: 1px solid var(--gray-200);
+}
+.accordion-item:last-child { border-bottom: none; }
+.accordion-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+.accordion-chevron {
+  width: 28px;
+  height: 28px;
+  background: var(--orange-accent);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  flex-shrink: 0;
+  transition: transform 0.2s;
+}
+.accordion-chevron.open { transform: rotate(180deg); }
+.accordion-body {
+  padding: 0 16px 14px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  display: none;
+}
+.accordion-body.open { display: block; }
+
+/* Next/CTA Section */
+.screen-next {
+  margin: 16px;
+  background: linear-gradient(135deg, #1B4B6C, #2196A4);
+  border-radius: var(--radius-lg);
+  padding: 24px 20px;
+  text-align: center;
+}
+.screen-next .next-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: rgba(255,255,255,0.6);
+  margin-bottom: 12px;
+}
+.screen-next .next-btn {
+  display: inline-block;
+  padding: 12px 32px;
+  background: var(--teal-btn);
+  color: white;
+  border-radius: 25px;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.screen-next .mark-complete {
+  display: block;
+  margin-top: 12px;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* Sub-index links */
+.screen-subindex {
+  padding: 0 20px 16px;
+}
+.screen-subindex h4 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 10px;
+}
+.screen-subindex a {
+  display: block;
+  padding: 10px 0;
+  font-size: 14px;
+  color: var(--navy-mid);
+  text-decoration: underline;
+  border-bottom: 1px solid var(--gray-200);
+  cursor: pointer;
+}
+.screen-subindex a:last-child { border-bottom: none; }
+
+/* Section heading */
+.screen-section-heading {
+  padding: 12px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+/* Video placeholder */
+.screen-video {
+  margin: 0 20px 16px;
+  background: linear-gradient(135deg, #1a2a3a, #2c4050);
+  border-radius: var(--radius-md);
+  height: 200px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.screen-video .play-btn {
+  width: 50px;
+  height: 50px;
+  background: rgba(255,255,255,0.2);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+}
+.screen-video .video-label {
+  color: rgba(255,255,255,0.6);
+  font-size: 12px;
+}
+
+/* Contact card */
+.screen-contact {
+  margin: 0 16px 16px;
+  background: var(--gray-100);
+  border-radius: var(--radius-md);
+  padding: 16px;
+}
+.screen-contact h4 {
+  font-size: 14px;
+  font-weight: 700;
+  margin-bottom: 8px;
+}
+.screen-contact p {
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+.screen-contact a {
+  color: var(--navy-mid);
+  text-decoration: underline;
+}
+
+/* Table */
+.screen-table {
+  margin: 0 16px 16px;
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+  border: 1px solid var(--gray-300);
+  font-size: 12px;
+}
+.screen-table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.screen-table th {
+  background: var(--navy-dark);
+  color: white;
+  padding: 10px 8px;
+  text-align: left;
+  font-size: 11px;
+  font-weight: 600;
+}
+.screen-table td {
+  padding: 8px;
+  border-bottom: 1px solid var(--gray-200);
+  font-size: 11px;
+  line-height: 1.4;
+  vertical-align: top;
+}
+.screen-table tr:last-child td { border-bottom: none; }
+.screen-table tr:nth-child(even) td { background: var(--gray-100); }
+
+/* Language selector */
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  margin: 0 16px 8px;
+  background: var(--gray-100);
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+.lang-option:hover { background: var(--gray-200); }
+.lang-option .radio {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid var(--gray-300);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.lang-option.selected .radio {
+  border-color: var(--navy-dark);
+}
+.lang-option.selected .radio::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--navy-dark);
+}
+
+/* Stage cards (home screen) */
+.stage-card {
+  margin: 0 16px 10px;
+  padding: 16px 20px;
+  background: linear-gradient(135deg, var(--navy-dark), var(--navy-mid));
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  cursor: pointer;
+  transition: transform 0.15s;
+}
+.stage-card:hover { transform: scale(1.01); }
+.stage-card .stage-num {
+  width: 32px;
+  height: 32px;
+  background: var(--orange-accent);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: white;
+  flex-shrink: 0;
+}
+.stage-card .stage-label {
+  color: white;
+  font-size: 14px;
+  font-weight: 500;
+  flex: 1;
+}
+.stage-card .stage-arrow {
+  color: rgba(255,255,255,0.5);
+  font-size: 16px;
+}
+
+/* Info row with icon */
+.info-row {
+  display: flex;
+  gap: 12px;
+  padding: 12px 20px;
+  align-items: flex-start;
+}
+.info-row .info-icon {
+  width: 36px;
+  height: 36px;
+  background: var(--gray-100);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+.info-row .info-text {
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+/* Bottom safe area */
+.screen-bottom-pad {
+  height: 34px;
+  flex-shrink: 0;
+}
+
+/* ========== RIGHT PANEL (Code Export) ========== */
+.code-panel {
+  width: 420px;
+  min-width: 420px;
+  background: #1e1e1e;
+  color: #d4d4d4;
+  display: none;
+  flex-direction: column;
+  font-family: 'SF Mono', 'Fira Code', 'Consolas', monospace;
+  font-size: 12px;
+}
+.code-panel.visible { display: flex; }
+.code-panel-header {
+  padding: 12px 16px;
+  background: #2d2d2d;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid #404040;
+}
+.code-panel-header span { font-size: 12px; font-weight: 600; color: #ccc; }
+.code-panel-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px;
+  white-space: pre-wrap;
+  line-height: 1.6;
+}
+.copy-btn {
+  padding: 4px 10px;
+  font-size: 11px;
+  background: #404040;
+  color: #ccc;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.copy-btn:hover { background: #505050; }
+
+/* ========== RESPONSIVE ========== */
+@media (max-width: 1100px) {
+  .sidebar { width: 260px; min-width: 260px; }
+  .code-panel { width: 320px; min-width: 320px; }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.2); border-radius: 3px; }
+.sidebar::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+.code-panel-body::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar"></div>
+
+  <!-- MAIN -->
+  <div class="main-content">
+    <div class="toolbar">
+      <div class="toolbar-title" id="toolbarTitle">Welcome Screen</div>
+      <button class="toolbar-btn secondary" onclick="toggleCodePanel()">{ } Code</button>
+      <button class="toolbar-btn secondary" onclick="prevScreen()">&#9664; Prev</button>
+      <button class="toolbar-btn secondary" onclick="nextScreen()">Next &#9654;</button>
+      <button class="toolbar-btn export-btn" onclick="exportCurrentScreen()">Export HTML</button>
+      <button class="toolbar-btn primary" onclick="exportAllScreens()">Export All</button>
+    </div>
+    <div class="preview-area">
+      <div class="phone-frame">
+        <div class="phone-notch"></div>
+        <div class="phone-status-bar">
+          <span class="time">12:15</span>
+          <span class="icons">&#9679;&#9679;&#9679; &#9632;</span>
+        </div>
+        <div class="screen-content" id="screenContent"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- CODE PANEL -->
+  <div class="code-panel" id="codePanel">
+    <div class="code-panel-header">
+      <span>Screen Code</span>
+      <button class="copy-btn" onclick="copyCode()">Copy</button>
+    </div>
+    <div class="code-panel-body" id="codeBody"></div>
+  </div>
+</div>
+
+<script>
+// ========== SCREEN DATA ==========
+const screens = [
+  // === WELCOME / HOME ===
+  {
+    id: 'welcome',
+    title: 'Welcome',
+    section: 'Home',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="nav-title">BIDMC Transplant Institute</div>
+      </div>
+      <div class="screen-breadcrumb">Liver Education Program</div>
+      <div class="screen-title">Welcome to the Transplant Department at Beth Israel Deaconess Medical Center</div>
+      <div class="screen-image">
+        <div class="placeholder-text">BIDMC Transplant Institute<br>Hero Image</div>
+      </div>
+      <div class="screen-section-heading">Select your Language</div>
+      <div class="lang-option selected"><div class="radio"></div> English (Validated)</div>
+      <div class="lang-option"><div class="radio"></div> Espa\u00f1ol ~ Spanish (Validated)</div>
+      <div class="lang-option"><div class="radio"></div> \u6F22\u5B57 ~ Mandarin (Validated)</div>
+      <div class="lang-option"><div class="radio"></div> Others (AI Generated)</div>
+      <div class="screen-section-heading" style="margin-top:8px">Select your Current Stage</div>
+      <div class="stage-card" onclick="goTo('s1-overview')"><div class="stage-num">1</div><div class="stage-label">Pre-Liver Transplant Evaluation</div><div class="stage-arrow">\u203A</div></div>
+      <div class="stage-card" onclick="goTo('s2-listing')"><div class="stage-num">2</div><div class="stage-label">Listing Process</div><div class="stage-arrow">\u203A</div></div>
+      <div class="stage-card" onclick="goTo('s3-surgery')"><div class="stage-num">3</div><div class="stage-label">Transplant Surgery & Hospital Stay</div><div class="stage-arrow">\u203A</div></div>
+      <div class="stage-card" onclick="goTo('s4-discharge')"><div class="stage-num">4</div><div class="stage-label">Getting Ready for Discharge</div><div class="stage-arrow">\u203A</div></div>
+      <div class="stage-card" onclick="goTo('s5-shortterm')"><div class="stage-num">5</div><div class="stage-label">Short-Term Follow Up</div><div class="stage-arrow">\u203A</div></div>
+      <div class="stage-card" onclick="goTo('s6-longterm')"><div class="stage-num">6</div><div class="stage-label">Long-Term Follow Up</div><div class="stage-arrow">\u203A</div></div>
+      <div class="stage-card" onclick="goTo('s7-glossary')"><div class="stage-num">7</div><div class="stage-label">Glossary</div><div class="stage-arrow">\u203A</div></div>
+      <div class="screen-contact" style="margin-top:16px">
+        <h4>Contact Information</h4>
+        <p>Transplant Institute<br>Beth Israel Deaconess Medical Center<br>110 Francis Street, 7th Floor<br>Boston, MA 02215</p>
+        <p style="margin-top:8px">P: 617-632-9700<br>F: 617-632-9804</p>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // === SECTION 1: PRE-LIVER TRANSPLANT EVALUATION ===
+  {
+    id: 's1-overview',
+    title: 'Section 1 Overview',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('welcome')">\u2039</div>
+        <div class="nav-title">Pre-Liver Transplant Evaluation</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1</div>
+      <div class="screen-title">Pre-Liver Transplant Evaluation</div>
+      <div class="screen-video">
+        <div class="play-btn">\u25B6</div>
+        <div class="video-label">Introductory Video</div>
+      </div>
+      <div class="screen-body">
+        <p><em>"Welcome. If you or someone you love has been told they may need a liver transplant, we know this can feel overwhelming. This video is here to help guide you, one step at a time, through what to expect during the pre-liver transplant evaluation process, and why it matters."</em></p>
+      </div>
+      <div class="screen-subindex">
+        <h4>Index</h4>
+        <a onclick="goTo('s1-1-team')">(1) Meet our team!</a>
+        <a onclick="goTo('s1-2-why')">(2) Why do I need a Liver Transplant?</a>
+        <a onclick="goTo('s1-3-how')">(3) How does Solid Organ Transplantation work?</a>
+        <a onclick="goTo('s1-4-eval')">(4) How does the Pre-Liver Transplant Evaluation work?</a>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.1 Meet our team
+  {
+    id: 's1-1-team',
+    title: '(1) Meet Our Team',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'existing',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-overview')">\u2039</div>
+        <div class="nav-title">Meet our team at BIDMC</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A Section 1 of 4</div>
+      <div class="screen-title">Meet our team at BIDMC</div>
+      <div class="screen-image">
+        <div class="expand-icon">\u2922</div>
+        <div class="placeholder-text">Graph of all services/departments</div>
+      </div>
+      <div class="screen-body"><p>Tap on below to read more about our team</p></div>
+      <div class="screen-tabs" id="teamTabs"></div>
+      <div class="screen-info-card" id="teamInfo"></div>
+      <div class="screen-subindex">
+        <h4>Sub-index</h4>
+        <a onclick="goTo('s1-1a-team-bidmc')">a. Meet our team at BIDMC</a>
+        <a onclick="goTo('s1-1b-multidisciplinary')">b. Learn about the multidisciplinary work at BIDMC</a>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-2-why')">Why do I need a Liver Transplant?</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.1a Team at BIDMC (detail)
+  {
+    id: 's1-1a-team-bidmc',
+    title: 'Meet our team at BIDMC',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'existing',
+    render: () => {
+      const roles = [
+        { name: 'Transplant Hepatologists', desc: 'The transplant hepatologist is a liver expert that has specialized training in the management of patients with end-stage liver disease, pre- and postoperative care of transplant patients, and in the use of immunosuppressive therapy.' },
+        { name: 'Transplant Surgeons', desc: 'Board certified transplant surgeons at BIDMC perform kidney, liver and pancreas transplants. They have specialized training in the transplant evaluation phase as well as pre- and postoperative care including immunosuppressive drugs and drug complications.' },
+        { name: 'Nurse Coordinators', desc: 'Nurse coordinators with expertise in transplantation provide coordination of care, education and close personal support throughout the transplant process. They coordinate all aspects of the evaluation process and monitor patient status on the organ transplant waiting list.' },
+        { name: 'Transplant Pharmacist', desc: 'The transplant pharmacist provides education to new transplant patients about immunosuppression medication, complex medication therapy management, and options for new immunosuppressive agents through clinical trials.' },
+        { name: 'Transplant Dietitian', desc: 'The transplant dietitian is focused on disease prevention and health promotion, providing patients with tools and resources to achieve and maintain a healthy weight.' },
+        { name: 'Practice Assistants', desc: 'The Practice Assistant greets patients, ensures updated medical records, takes vital signs, and manages patient clinic flow. They also assist with scheduling tests, labs, and specialty appointments.' },
+        { name: 'Infectious Disease Physician', desc: 'An on-site infectious disease clinic provides evaluation and management for patients with any infectious disease challenge, including infection in immunocompromised patients.' },
+        { name: 'Transplant Social Workers', desc: 'A licensed mental health professional who does psychosocial assessments and works with patients through all phases of transplant care, offering practical and emotional support.' },
+        { name: 'Transplant Psychologist', desc: 'A behavioral health professional specializing in transplantation who evaluates behavioral health and psychological needs of patients and families.' },
+        { name: 'Financial Coordinator', desc: 'Works with the Transplant Institute team, patients and families to coordinate the financial aspects needed to support the transplant process, from evaluation through postoperative care.' },
+        { name: 'Administrative Staff', desc: 'Coordinates patient appointments, maintains medical records, schedules surgical procedures and pre-admission testing, and greets patients and families.' },
+        { name: 'Nurse Practitioners', desc: 'Nurse practitioners with a master\'s degree certified by the American Nurses Credentialing Center. They assess, plan and coordinate pre-transplant and post-transplant care.' },
+        { name: 'Surgeon Coverage Plan', desc: 'The surgical transplant team is available 365 days a year, 24/7. All surgeons are on site at BIDMC and can be on hospital premises within one hour if necessary.' },
+      ];
+      const tabs = roles.map((r,i) => `<div class="screen-tab ${i===0?'active':''}" onclick="selectTeamRole(${i})">${r.name}<span class="chevron">\u203A</span></div>`).join('');
+      const info = `
+        <h4>${roles[0].name}</h4>
+        <h5>Who are they?</h5>
+        <p>${roles[0].desc}</p>
+        <h5>What are they responsible for?</h5>
+        <p>See detailed role description in the app content.</p>
+        <h5>How do they collaborate?</h5>
+        <p>They work collaboratively with all members of the transplant team in the selection and care of transplant recipients and donors.</p>
+      `;
+      return `
+        <div class="screen-nav">
+          <div class="back-arrow" onclick="goTo('s1-1-team')">\u2039</div>
+          <div class="nav-title">Meet our team at BIDMC</div>
+        </div>
+        <div class="screen-breadcrumb">Section 1 \u203A Section 1 of 4</div>
+        <div class="screen-title">Meet our team at BIDMC</div>
+        <div class="screen-image">
+          <div class="expand-icon">\u2922</div>
+          <div class="placeholder-text">Image of Transplant Hepatologists</div>
+        </div>
+        <div class="screen-body"><p>Tap on below to read more about our team</p></div>
+        <div class="screen-tabs">${tabs}</div>
+        <div class="screen-info-card">${info}</div>
+        <div class="screen-next">
+          <div class="next-label">NEXT</div>
+          <div class="next-btn" onclick="goTo('s1-1b-multidisciplinary')">Meet our team at BIDMC</div>
+          <div class="mark-complete">Mark this as completed</div>
+        </div>
+        <div class="screen-bottom-pad"></div>
+      `;
+    }
+  },
+
+  // 1.1b Multidisciplinary work
+  {
+    id: 's1-1b-multidisciplinary',
+    title: 'Multidisciplinary Work at BIDMC',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-1-team')">\u2039</div>
+        <div class="nav-title">Learn about...</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A Subsection 1b</div>
+      <div class="screen-title">Learn about the multidisciplinary work at BIDMC</div>
+      <div class="screen-image">
+        <div class="placeholder-text">Multidisciplinary Team Image</div>
+      </div>
+      <div class="screen-body">
+        <p>The <strong>transplant surgeons</strong> have internet access to Donor Net for immediate response to organ offers. The monthly call schedule identifies the surgeon covering each program for organ offers, transplantation, and urgent patient issues.</p>
+        <p>There are <strong>transplant kidney specialists</strong> who are available at all times to the transplant surgical team and to manage urgent patient issues.</p>
+        <p>Our <strong>hepatologists</strong> share calls and are therefore available at all times to the transplant surgical team and to manage urgent patient issues.</p>
+        <p>In addition to the surgeons and physicians, there is a <strong>transplant nurse coordinator</strong> on call after business hours, on weekends and holidays.</p>
+      </div>
+      <div class="screen-contact">
+        <h4>Learn more about how to contact us at BIDMC</h4>
+        <p><strong>Office Hours (Mon-Fri, 8 AM-5 PM)</strong><br>617-632-9700 \u2014 calls are triaged to the appropriate team member.</p>
+        <p style="margin-top:8px"><strong>After Hours (Weekdays 5 PM-8 AM, weekends, holidays)</strong><br>Answered by an answering service; calls directed to on-call surgeon, nephrologist, hepatologist or nurse coordinator.</p>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-2-why')">Why do I need a Liver Transplant?</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.2 Why do I need a Liver Transplant?
+  {
+    id: 's1-2-why',
+    title: '(2) Why do I need a Liver Transplant?',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-overview')">\u2039</div>
+        <div class="nav-title">Why do I need a Liver Transplant?</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A Section 2 of 4</div>
+      <div class="screen-title">Why do I need a Liver Transplant?</div>
+      <div class="screen-video">
+        <div class="play-btn">\u25B6</div>
+        <div class="video-label">Introductory Video</div>
+      </div>
+      <div class="screen-body">
+        <p><em>"Transplantation is the leading form of treatment for many forms of end-stage organ failure. It has saved and enhanced the lives of more than 700,000 people in the United States."</em></p>
+      </div>
+      <div class="screen-subindex">
+        <h4>Sub-index</h4>
+        <a onclick="goTo('s1-2a-what')">a. What is Liver Transplantation?</a>
+        <a onclick="goTo('s1-2b-indications')">b. Indications for Liver Transplant</a>
+        <a onclick="goTo('s1-2c-eligibility')">c. Clinical Eligibility</a>
+        <a onclick="goTo('s1-2d-not-eligible')">d. Why may patients not be eligible?</a>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-3-how')">How does Solid Organ Transplantation work?</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.2a What is Liver Transplantation?
+  {
+    id: 's1-2a-what',
+    title: 'What is Liver Transplantation?',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-2-why')">\u2039</div>
+        <div class="nav-title">What is Liver Transplantation?</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A 2a</div>
+      <div class="screen-title">What is Liver Transplantation?</div>
+      <div class="screen-image"><div class="placeholder-text">Liver Diagram</div></div>
+      <div class="screen-body">
+        <p>A liver transplant may be considered as a treatment option for people with advanced or end-stage liver disease, who have deteriorating liver function and quality of life, and who are unable to benefit from other medical and surgical treatments.</p>
+        <p>Many different diseases can harm the liver. Some are "acute," occurring quickly in just days or weeks, while others are "chronic" and take years to do damage. The liver has an amazing ability to regenerate, or make new liver tissue. However, extensive damage to liver cells can lead to scarring, which can prevent this recovery. Cirrhosis occurs because of chronic liver damage.</p>
+      </div>
+      <div class="screen-section-heading">What is Cirrhosis?</div>
+      <div class="screen-body">
+        <p>Cirrhosis is a condition in which broad bands of scar tissue develop and surround regenerating liver tissue.</p>
+      </div>
+      <ul class="screen-bullets">
+        <li>It destroys liver cell function.</li>
+        <li>It impairs blood flow through the liver, so that gradually the liver loses its ability to clean the body of toxins, manufacture proteins and clotting substances, and process nutrients and hormones.</li>
+        <li>It increases pressure in veins which flow into the liver ("portal" veins), leading to high blood pressure within the liver ("portal hypertension").</li>
+      </ul>
+      <div class="screen-body">
+        <p>Any patient with liver disease that severely impairs quality of life or threatens to shorten one's life may be a candidate for liver transplantation.</p>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-2b-indications')">Indications for Liver Transplant</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.2b Indications for Liver Transplant
+  {
+    id: 's1-2b-indications',
+    title: 'Indications for Liver Transplant',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => {
+      const conditions = [
+        { name: 'Alcohol-related Cirrhosis', desc: 'The toxic effects of alcohol can cause inflammation, scarring, and eventually cirrhosis. The amount and duration of alcohol use required to cause liver injury can vary dramatically between patients.' },
+        { name: 'NAFLD / NASH', desc: 'Fat accumulation in the liver can occur for a number of reasons, including obesity and other obesity-related conditions like diabetes, high blood pressure, high cholesterol, or sleep apnea. This is now a leading cause of cirrhosis.' },
+        { name: 'Viral Hepatitis', desc: 'Inflammation from viral infection of the liver cells, causing swelling, cell death, and ultimately leading to liver destruction or scarring. Hepatitis C virus (HCV) is a leading cause of liver transplantation in the United States.' },
+        { name: 'Autoimmune Hepatitis', desc: 'A condition in which the body\'s immune system is unable to "recognize" its own liver tissue. The immune system attacks liver cells, causing inflammation and scarring which can ultimately lead to liver cirrhosis.' },
+        { name: 'Biliary Cirrhosis (PBC)', desc: 'Cirrhosis or liver scarring due to blockage in the bile ducts. When bile ducts become blocked, bile pools in the liver, causing swelling, cell death, infection, and loss of liver function.' },
+        { name: 'Primary Sclerosing Cholangitis (PSC)', desc: 'A condition in which the bile ducts become progressively damaged by inflammation, leading to jaundice, itch, and cirrhosis. More commonly seen in patients with inflammatory bowel disease.' },
+        { name: 'Cryptogenic Cirrhosis', desc: 'Sometimes patients develop scarring that destroys the liver for no apparent reason, without a known history of any specific liver disease or risk factors.' },
+        { name: 'Acute Liver Failure', desc: 'A severe and rapid liver injury in the absence of previously known liver disease. Treatment may require emergency liver transplantation within a short period of time.' },
+        { name: 'Liver Tumors', desc: 'Surgeons perform liver transplantation for selected primary liver tumors (beginning in the liver) and for selected metastatic liver tumors (spread from other organs).' },
+        { name: 'Hepatocellular Carcinoma (HCC)', desc: 'The most common primary liver tumor in adults and one of the most common reasons for liver transplantation. Specific criteria are followed to minimize the risk of recurrence after transplant.' },
+        { name: 'Metabolic & Genetic Disorders', desc: 'Patients with certain inherited diseases may benefit, including injury from toxic buildup of iron (hemochromatosis), copper (Wilson\'s disease), or other proteins (alpha-1 antitrypsin deficiency).' },
+        { name: 'Miscellaneous Conditions', desc: 'Adult polycystic disease, amyloidosis, sarcoidosis, trauma to the liver, and certain vascular diseases such as Budd-Chiari Syndrome.' },
+      ];
+      const tabs = conditions.map((c,i) => `<div class="screen-tab" onclick="showCondition(this, '${c.name.replace(/'/g,"\\'")}', '${c.desc.replace(/'/g,"\\'")}')">${c.name}<span class="chevron">\u203A</span></div>`).join('');
+      return `
+        <div class="screen-nav">
+          <div class="back-arrow" onclick="goTo('s1-2-why')">\u2039</div>
+          <div class="nav-title">Indications for Liver Transplant</div>
+        </div>
+        <div class="screen-breadcrumb">Section 1 \u203A 2b</div>
+        <div class="screen-title">Indications for Liver Transplant</div>
+        <div class="screen-image"><div class="placeholder-text">Diagram of liver conditions</div></div>
+        <div class="screen-image-caption">Tap on a condition to learn more</div>
+        <div class="screen-tabs">${tabs}</div>
+        <div class="screen-info-card" id="conditionInfo" style="display:none"></div>
+        <div class="screen-next">
+          <div class="next-label">NEXT</div>
+          <div class="next-btn" onclick="goTo('s1-2c-eligibility')">Clinical Eligibility</div>
+          <div class="mark-complete">Mark this as completed</div>
+        </div>
+        <div class="screen-bottom-pad"></div>
+      `;
+    }
+  },
+
+  // 1.2c Clinical Eligibility
+  {
+    id: 's1-2c-eligibility',
+    title: 'Clinical Eligibility',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-2-why')">\u2039</div>
+        <div class="nav-title">Clinical Eligibility</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A 2c</div>
+      <div class="screen-title">Clinical Eligibility for Liver Transplant</div>
+      <div class="screen-image"><div class="placeholder-text">Eligibility Criteria Graphic</div></div>
+      <div class="screen-body"><p><strong>How do we select who receives a Liver Transplant?</strong></p></div>
+      <ul class="screen-bullets">
+        <li>The patient needs to have end-stage liver disease with a life expectancy of 12 months or less and has no medical or surgical alternative to a liver transplant.</li>
+        <li>Each patient and their support team must understand the reasons for transplant, the possible benefits and risks, and the possible complications.</li>
+        <li>Each patient must be able to follow medical directions and take medications as prescribed. Must be able to get frequent blood tests and keep scheduled clinic appointments.</li>
+        <li>All patients who want a liver transplant must meet with the transplant social worker or psychologist to identify any social or psychological issues.</li>
+        <li>Patients with alcohol related liver disease or a history of substance use disorder must review and sign the BIDMC Transplant Institute's Patient Responsibility Agreement.</li>
+      </ul>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-2d-not-eligible')">Why may patients not be eligible?</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.2d Why may patients not be eligible?
+  {
+    id: 's1-2d-not-eligible',
+    title: 'Why may patients not be eligible?',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-2-why')">\u2039</div>
+        <div class="nav-title">Eligibility Barriers</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A 2d</div>
+      <div class="screen-title">Why may patients not be eligible for transplant?</div>
+      <div class="screen-body">
+        <p>Every patient at BIDMC receives an individualized evaluation to identify any areas of concern. Unfortunately, not all people with severe liver illness are appropriate for transplant.</p>
+        <p><strong>Possible barriers to liver transplantation include:</strong></p>
+      </div>
+      <ul class="screen-bullets">
+        <li>Active drug or alcohol abuse</li>
+        <li>Extensive cancer (spread outside the liver or very large/numerous tumors)</li>
+        <li>Severe heart or lung disease</li>
+        <li>Inability to consistently follow medical instructions, take medications, or attend appointments</li>
+        <li>Inadequate social supports to help manage the demands of transplant</li>
+        <li>Uncontrolled psychiatric conditions</li>
+        <li>Uncontrolled pulmonary hypertension</li>
+        <li>Other active illness(es) that would compromise success of liver transplant</li>
+      </ul>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-3-how')">How does Organ Transplantation work?</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.3 How does Solid Organ Transplantation work?
+  {
+    id: 's1-3-how',
+    title: '(3) How does Solid Organ Transplantation work?',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-overview')">\u2039</div>
+        <div class="nav-title">Organ Transplantation</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A Section 3 of 4</div>
+      <div class="screen-title">How does Solid Organ Transplantation work?</div>
+      <div class="screen-video">
+        <div class="play-btn">\u25B6</div>
+        <div class="video-label">Introductory Video</div>
+      </div>
+      <div class="screen-body">
+        <p><em>"Have you ever wondered how solid organ transplantation actually works? In this section, we'll walk you through the fascinating process behind liver transplantation and the intricate system that makes it possible."</em></p>
+      </div>
+      <div class="screen-subindex">
+        <h4>Sub-index</h4>
+        <a onclick="goTo('s1-3a-unos')">a. What is UNOS?</a>
+        <a onclick="goTo('s1-3b-policies')">b. How are policies about liver transplantation and organ allocation developed?</a>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-4-eval')">Pre-Liver Transplant Evaluation</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.3a What is UNOS?
+  {
+    id: 's1-3a-unos',
+    title: 'What is UNOS?',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-3-how')">\u2039</div>
+        <div class="nav-title">What is UNOS?</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A 3a</div>
+      <div class="screen-title">What is UNOS?</div>
+      <div class="screen-image"><div class="placeholder-text">UNOS Logo / Graphic</div></div>
+      <div class="screen-body">
+        <p>The United Network for Organ Sharing (UNOS) is a private, nonprofit membership organization that coordinates the nation's organ transplant system, providing vital services to meet the needs of men, women and children awaiting lifesaving organ transplants.</p>
+        <p>Since 1988, UNOS has facilitated more than a half million organ transplants. Their mission is to save as many lives as possible through organ transplantation by:</p>
+      </div>
+      <ul class="screen-bullets">
+        <li>Increasing organ donations and increasing transplants</li>
+        <li>Making the organ transplant system as fair, safe and efficient as possible</li>
+        <li>Helping transplant candidates and recipients make informed health choices</li>
+        <li>Promoting best practices among transplant professionals</li>
+        <li>Collecting, analyzing and sharing clinical transplant data to improve care and outcomes</li>
+        <li>Celebrating organ and tissue donors and inspiring others to be as generous</li>
+      </ul>
+      <div class="screen-contact">
+        <h4>Find more information about UNOS</h4>
+        <p><a>www.unos.org</a><br><a>www.transplantliving.org</a><br><a>www.donormemorial.org</a></p>
+        <p style="margin-top:8px">United Network for Organ Sharing<br>700 North 4th Street<br>Richmond, VA 23219<br>askunos@unos.org<br>(804) 782-4800</p>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-3b-policies')">Organ Allocation Policies</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.3b Policy development
+  {
+    id: 's1-3b-policies',
+    title: 'Organ Allocation Policies',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-3-how')">\u2039</div>
+        <div class="nav-title">Organ Allocation Policies</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A 3b</div>
+      <div class="screen-title">How are organ allocation policies developed?</div>
+      <div class="screen-image"><div class="placeholder-text">Policy Process Diagram</div></div>
+      <div class="screen-body">
+        <p>Continuing advances in the science and practice of organ transplantation require ongoing refinement of policy. The policy development process is:</p>
+      </div>
+      <ul class="screen-bullets">
+        <li><strong>Inclusive</strong> \u2013 encouraging participation by interested persons and organizations</li>
+        <li><strong>Responsive</strong> \u2013 assessing and modifying policies to remain current with the field</li>
+        <li><strong>Equitable</strong> \u2013 helping to ensure that all patients have an equal chance of receiving a suitable organ</li>
+        <li><strong>Evidence based</strong> \u2013 making decisions based on extensive and valid scientific data and analysis</li>
+      </ul>
+      <div class="screen-body">
+        <p>A 42-member board of directors makes policy decisions. Board members represent the diversity of professions and viewpoints within the field of organ transplantation. The board receives input from more than 20 permanent and ad hoc committees addressing:</p>
+      </div>
+      <ul class="screen-bullets">
+        <li>Patient and donor family issues</li>
+        <li>Medical issues specific to the various transplantable organs</li>
+        <li>Needs and concerns of ethnic minorities and children needing transplants</li>
+        <li>Technical aspects of organ recovery and matching</li>
+        <li>Ethical principles</li>
+        <li>Collection and reporting of scientific data</li>
+      </ul>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-4-eval')">Pre-Liver Transplant Evaluation</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.4 How does the Pre-Liver Transplant Evaluation work?
+  {
+    id: 's1-4-eval',
+    title: '(4) Pre-Liver Transplant Evaluation',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-overview')">\u2039</div>
+        <div class="nav-title">Pre-Liver Evaluation</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A Section 4 of 4</div>
+      <div class="screen-title">How does the Pre-Liver Transplant Evaluation work?</div>
+      <div class="screen-video">
+        <div class="play-btn">\u25B6</div>
+        <div class="video-label">Introductory Video</div>
+      </div>
+      <div class="screen-body">
+        <p><em>"Welcome! If you've been referred for a liver transplant evaluation, you probably have a lot of questions. And that's completely normal."</em></p>
+      </div>
+      <div class="screen-subindex">
+        <h4>Sub-index</h4>
+        <a onclick="goTo('s1-4a-consultation')">a. What should I expect in my initial consultation?</a>
+        <a onclick="goTo('s1-4b-financial')">b. Financial considerations</a>
+        <a onclick="goTo('s1-4c-after')">c. What will happen after the evaluation?</a>
+        <a onclick="goTo('s1-4d-responsibilities')">d. What responsibilities must patients acknowledge?</a>
+        <a onclick="goTo('s1-4e-why-bidmc')">e. Why do I want to be evaluated at BIDMC?</a>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s2-listing')">Section 2: Listing Process</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.4a Initial consultation
+  {
+    id: 's1-4a-consultation',
+    title: 'Initial Consultation',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-4-eval')">\u2039</div>
+        <div class="nav-title">Initial Consultation</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A 4a</div>
+      <div class="screen-title">What should I expect in my initial consultation?</div>
+      <div class="screen-image"><div class="placeholder-text">Consultation Photo</div></div>
+      <div class="screen-body">
+        <p>The main goals of the initial consultation are to determine 1) if you have a liver disease for which transplantation is the best treatment and 2) whether your overall condition is such that you can safely undergo transplantation.</p>
+        <p>At the initial consultation, you will be expected to bring a member(s) of your family or social support network with you, who will be involved in your care before, during and after transplantation.</p>
+        <p>If you cannot make an appointment for any reason, it is expected that you will notify the Transplant Institute (617-632-9700) or contact the department directly to reschedule.</p>
+      </div>
+      <div class="screen-section-heading">Select the specialty to learn more:</div>
+      <div class="screen-accordion">
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">The Transplant Hepatologist<div class="accordion-chevron">\u25BC</div></div>
+          <div class="accordion-body">Will try to assess the nature and severity of your liver disease, the state of your general health and will try to determine if liver transplantation is a suitable therapy. Alternative therapies may be discussed and medical management of your liver condition will be optimized.</div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">The Social Worker<div class="accordion-chevron">\u25BC</div></div>
+          <div class="accordion-body">Will conduct a full psychosocial evaluation including an assessment of your current functioning, medical insurance coverage, housing, mental health history, and personal support system.</div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">The Transplant Dietitian<div class="accordion-chevron">\u25BC</div></div>
+          <div class="accordion-body">Will evaluate your nutritional needs and provide you with the necessary tools and resources to help you achieve and maintain a healthy weight. Will review a 3 day food log that you complete.</div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">The Transplant Pharmacist<div class="accordion-chevron">\u25BC</div></div>
+          <div class="accordion-body">Will provide you and your support person(s) with education about your current medication regimen, post-transplant medications including anti-rejection medications (immunosuppression).</div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">Transplant Surgeon<div class="accordion-chevron">\u25BC</div></div>
+          <div class="accordion-body">Once you have completed abdominal imaging and much of your work up, you will be scheduled to see a Transplant Surgeon who will assess your liver condition, discuss the surgery, and post-operative recovery period.</div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">Clinical Transplant Coordinator<div class="accordion-chevron">\u25BC</div></div>
+          <div class="accordion-body">You and your caregiver(s) will be expected to attend a Transplant Orientation Class with our Clinical Transplant Coordinators. There is a Transplant Institute Support Group that meets online every Wednesday from 1:00-2:00 PM.</div>
+        </div>
+      </div>
+      <div class="screen-section-heading">Tests/Consults Required</div>
+      <ul class="screen-bullets">
+        <li>Routine blood work</li>
+        <li>Chest x-ray or CT scan of your chest</li>
+        <li>EKG (an electrical tracing of the heart rhythm)</li>
+        <li>Echocardiogram and other cardiac testing</li>
+        <li>Pulmonary function tests with arterial blood gases</li>
+        <li>An abdominal CT or MRI scan</li>
+        <li>A bone mineral density scan</li>
+        <li>A dental evaluation</li>
+        <li>Age appropriate cancer screenings</li>
+        <li>Hepatitis A & B Vaccination</li>
+      </ul>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-4b-financial')">Financial Considerations</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.4b Financial considerations (placeholder)
+  {
+    id: 's1-4b-financial',
+    title: 'Financial Considerations',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-4-eval')">\u2039</div>
+        <div class="nav-title">Financial Considerations</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A 4b</div>
+      <div class="screen-title">Financial Considerations</div>
+      <div class="screen-image"><div class="placeholder-text">Financial Planning Graphic</div></div>
+      <div class="screen-body">
+        <p>The transplant financial coordinator works with other members of the Transplant Institute team, patients and families to coordinate the financial aspects needed to support the transplant process, from evaluation through postoperative care.</p>
+        <p>The financial coordinator works collaboratively with the insurance companies and BIDMC financial services to obtain authorization for a transplant and to identify out-of-pocket expense for the patient.</p>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-4c-after')">What will happen after the evaluation?</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.4c After evaluation
+  {
+    id: 's1-4c-after',
+    title: 'After the Evaluation',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-4-eval')">\u2039</div>
+        <div class="nav-title">After Evaluation</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A 4c</div>
+      <div class="screen-title">What will happen after the evaluation?</div>
+      <div class="screen-image"><div class="placeholder-text">Evaluation Process Diagram</div></div>
+      <div class="screen-body">
+        <p>After all tests and consultations are complete, the transplant team will review your case to determine if you are a candidate for liver transplantation. Your case will be presented at a multidisciplinary selection committee meeting.</p>
+        <p>If approved for listing, you will be placed on the UNOS waiting list. Your MELD score will help determine your priority on the waiting list.</p>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-4d-responsibilities')">Patient Responsibilities</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.4d What responsibilities (existing Figma screen)
+  {
+    id: 's1-4d-responsibilities',
+    title: 'What responsibilities must patients acknowledge?',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'existing',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-4-eval')">\u2039</div>
+        <div class="nav-title">What responsibilities</div>
+      </div>
+      <div class="screen-breadcrumb">Module 1 - Section 1 of 4</div>
+      <div class="screen-title">What responsibilities do patients have before being listed?</div>
+      <div class="screen-image"><div class="placeholder-text">Picture of all the following services/departments</div></div>
+      <div class="screen-image-caption">Picture of all the following services/departments</div>
+      <div class="screen-body">
+        <p><strong>Transplant Listing Eligibility: Substance Use Policy</strong> To be considered for a transplant, patients must follow a strict no alcohol or drug use policy.</p>
+      </div>
+      <div class="screen-accordion">
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">Abstinence Requirements<div class="accordion-chevron">\u25BC</div></div>
+          <div class="accordion-body">All patients must commit to a life without alcohol or drugs to be considered for liver transplantation. Regular toxicology screenings are required.</div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">Relapse Prevention Program<div class="accordion-chevron">\u25BC</div></div>
+          <div class="accordion-body">Patients with a history of substance use disorder must participate in an approved relapse prevention program as determined by the transplant social worker and psychologist.</div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">If Relapse Occurs<div class="accordion-chevron">\u25BC</div></div>
+          <div class="accordion-body">Any relapse will be reviewed by the transplant team. Depending on the circumstances, the patient may need to restart the evaluation process or be removed from the waiting list.</div>
+        </div>
+        <div class="accordion-item">
+          <div class="accordion-header" onclick="toggleAccordion(this)">Other Requirements<div class="accordion-chevron">\u25BC</div></div>
+          <div class="accordion-body">Patients must also commit to following all medical instructions, attending all appointments, and maintaining open communication with the transplant team.</div>
+        </div>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-4e-why-bidmc')">Meet our team at BIDMC</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // 1.4e Why BIDMC
+  {
+    id: 's1-4e-why-bidmc',
+    title: 'Why be evaluated at BIDMC?',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'existing',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-4-eval')">\u2039</div>
+        <div class="nav-title">Why do I want to be...</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A Section 1 of 4</div>
+      <div class="screen-title">Why do I want to be evaluated at BIDMC?</div>
+      <div class="screen-image"><div class="placeholder-text">Image: What will happen after evaluation?</div></div>
+      <div class="screen-body">
+        <p>Beth Israel Deaconess Medical Center is a leader in the Transplant Field and a Pioneer in Technology and Surgical Techniques.</p>
+        <p>The Scientific Registry of Transplant Recipients (SRTR) provides statistical analyses of transplant and waitlist volunteer outcome data. This data is provided by SRTR every 6 months and is generally updated in January and July.</p>
+      </div>
+      <div class="screen-info-card">
+        <h4>SRTR Data for BIDMC</h4>
+        <p>Include a caption of the current SRTR matrix for BIDMC. This provides transparent outcomes data for patients considering evaluation at BIDMC.</p>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s1-4-eval-blood')">Blood Tests Reference</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // Blood tests table
+  {
+    id: 's1-4-eval-blood',
+    title: 'Common Blood Tests',
+    section: 'Section 1: Pre-Liver Evaluation',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('s1-4-eval')">\u2039</div>
+        <div class="nav-title">Blood Tests</div>
+      </div>
+      <div class="screen-breadcrumb">Section 1 \u203A Reference</div>
+      <div class="screen-title">Common Blood Tests</div>
+      <div class="screen-body"><p>Learn more about common blood tests you will encounter throughout your transplant experience:</p></div>
+      <div class="screen-table">
+        <table>
+          <tr><th>Test Type</th><th>What it Measures</th><th>Increase May Mean</th><th>Decrease May Mean</th></tr>
+          <tr><td>Albumin</td><td>Protein produced by the liver</td><td>Recovering from serious illness</td><td>Kidney disease, Hepatitis, Malnutrition</td></tr>
+          <tr><td>Alkaline Phosphatase</td><td>Enzyme in liver, bone, intestine</td><td>Inflammation in bile ducts</td><td>N/A</td></tr>
+          <tr><td>Amylase</td><td>Enzyme in pancreas & salivary glands</td><td>Pancreatitis, Gallbladder problems</td><td>Pancreatic insufficiency</td></tr>
+          <tr><td>ALT</td><td>Enzyme released when liver cells injured</td><td>Liver transplant rejection, Hepatitis</td><td>N/A</td></tr>
+          <tr><td>AST</td><td>Enzyme released when liver injured</td><td>Liver cell injury, Hepatitis</td><td>N/A</td></tr>
+          <tr><td>Bicarbonate (HCO3)</td><td>Acid/base balance of blood</td><td>Lung disorder, Diabetes, Kidney failure</td><td>N/A</td></tr>
+        </table>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s2-listing')">Section 2: Listing Process</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+
+  // === SECTION 2-7 PLACEHOLDERS ===
+  {
+    id: 's2-listing',
+    title: 'Section 2: Listing Process',
+    section: 'Section 2: Listing Process',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('welcome')">\u2039</div>
+        <div class="nav-title">Listing Process</div>
+      </div>
+      <div class="screen-breadcrumb">Section 2</div>
+      <div class="screen-title">Listing Process</div>
+      <div class="screen-video">
+        <div class="play-btn">\u25B6</div>
+        <div class="video-label">Introductory Video</div>
+      </div>
+      <div class="screen-body">
+        <p>This section will cover the listing process including MELD scores, the waiting list, and what to expect while waiting for a liver transplant.</p>
+        <p><em>Content to be populated from Section 2 of the document.</em></p>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s3-surgery')">Transplant Surgery & Hospital Stay</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+  {
+    id: 's3-surgery',
+    title: 'Section 3: Transplant Surgery',
+    section: 'Section 3: Surgery & Hospital Stay',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('welcome')">\u2039</div>
+        <div class="nav-title">Transplant Surgery</div>
+      </div>
+      <div class="screen-breadcrumb">Section 3</div>
+      <div class="screen-title">Transplant Surgery and Hospital Stay</div>
+      <div class="screen-video">
+        <div class="play-btn">\u25B6</div>
+        <div class="video-label">Introductory Video</div>
+      </div>
+      <div class="screen-body">
+        <p>This section covers what to expect during the transplant surgery, the hospital stay, and the immediate recovery period.</p>
+        <p><em>Content to be populated from Section 3 of the document.</em></p>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s4-discharge')">Getting Ready for Discharge</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+  {
+    id: 's4-discharge',
+    title: 'Section 4: Getting Ready for Discharge',
+    section: 'Section 4: Discharge',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('welcome')">\u2039</div>
+        <div class="nav-title">Getting Ready for Discharge</div>
+      </div>
+      <div class="screen-breadcrumb">Section 4</div>
+      <div class="screen-title">Getting Ready for Discharge</div>
+      <div class="screen-video">
+        <div class="play-btn">\u25B6</div>
+        <div class="video-label">Introductory Video</div>
+      </div>
+      <div class="screen-body">
+        <p>This section covers discharge instructions, medication management, and preparing to go home after your transplant.</p>
+        <p><em>Content to be populated from Section 4 of the document.</em></p>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s5-shortterm')">Short-Term Follow Up</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+  {
+    id: 's5-shortterm',
+    title: 'Section 5: Short-Term Follow Up',
+    section: 'Section 5: Short-Term Follow Up',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('welcome')">\u2039</div>
+        <div class="nav-title">Short-Term Follow Up</div>
+      </div>
+      <div class="screen-breadcrumb">Section 5</div>
+      <div class="screen-title">Short-Term Follow Up</div>
+      <div class="screen-video">
+        <div class="play-btn">\u25B6</div>
+        <div class="video-label">Introductory Video</div>
+      </div>
+      <div class="screen-body">
+        <p>This section covers the short-term follow-up period after discharge, including clinic visits, lab work, and monitoring for complications.</p>
+        <p><em>Content to be populated from Section 5 of the document.</em></p>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s6-longterm')">Long-Term Follow Up</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+  {
+    id: 's6-longterm',
+    title: 'Section 6: Long-Term Follow Up',
+    section: 'Section 6: Long-Term Follow Up',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('welcome')">\u2039</div>
+        <div class="nav-title">Long-Term Follow Up</div>
+      </div>
+      <div class="screen-breadcrumb">Section 6</div>
+      <div class="screen-title">Long-Term Follow Up</div>
+      <div class="screen-video">
+        <div class="play-btn">\u25B6</div>
+        <div class="video-label">Introductory Video</div>
+      </div>
+      <div class="screen-body">
+        <p>This section covers long-term health management after liver transplant, including ongoing medication management, preventive care, and living well after transplant.</p>
+        <p><em>Content to be populated from Section 6 of the document.</em></p>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">NEXT</div>
+        <div class="next-btn" onclick="goTo('s7-glossary')">Glossary</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+  {
+    id: 's7-glossary',
+    title: 'Section 7: Glossary',
+    section: 'Section 7: Glossary',
+    status: 'new',
+    render: () => `
+      <div class="screen-nav">
+        <div class="back-arrow" onclick="goTo('welcome')">\u2039</div>
+        <div class="nav-title">Glossary</div>
+      </div>
+      <div class="screen-breadcrumb">Section 7</div>
+      <div class="screen-title">Glossary</div>
+      <div class="screen-body"><p>Key terms and definitions related to liver transplantation.</p></div>
+      <div class="screen-accordion">
+        <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Cirrhosis<div class="accordion-chevron">\u25BC</div></div><div class="accordion-body">A condition in which broad bands of scar tissue develop and surround regenerating liver tissue, destroying liver cell function.</div></div>
+        <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">MELD Score<div class="accordion-chevron">\u25BC</div></div><div class="accordion-body">Model for End-stage Liver Disease. A scoring system used to prioritize patients on the liver transplant waiting list based on how sick they are.</div></div>
+        <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">UNOS<div class="accordion-chevron">\u25BC</div></div><div class="accordion-body">United Network for Organ Sharing. A private, nonprofit organization that coordinates the nation's organ transplant system.</div></div>
+        <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Immunosuppression<div class="accordion-chevron">\u25BC</div></div><div class="accordion-body">Medications that reduce the body's immune response to prevent rejection of the transplanted organ.</div></div>
+        <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Portal Hypertension<div class="accordion-chevron">\u25BC</div></div><div class="accordion-body">High blood pressure within the liver's portal venous system, often caused by cirrhosis.</div></div>
+        <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Hepatocellular Carcinoma (HCC)<div class="accordion-chevron">\u25BC</div></div><div class="accordion-body">The most common primary liver tumor in adults and one of the most common reasons for liver transplantation.</div></div>
+        <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">OPO<div class="accordion-chevron">\u25BC</div></div><div class="accordion-body">Organ Procurement Organization. The local organization that coordinates the recovery of organs from deceased donors.</div></div>
+        <div class="accordion-item"><div class="accordion-header" onclick="toggleAccordion(this)">Donor Net<div class="accordion-chevron">\u25BC</div></div><div class="accordion-body">An internet-based system used by transplant surgeons to receive organ offers and respond to them.</div></div>
+      </div>
+      <div class="screen-next">
+        <div class="next-label">COMPLETE</div>
+        <div class="next-btn" onclick="goTo('welcome')">Back to Home</div>
+        <div class="mark-complete">Mark this as completed</div>
+      </div>
+      <div class="screen-bottom-pad"></div>
+    `
+  },
+];
+
+// ========== STATE ==========
+let currentScreenIndex = 0;
+let codePanelVisible = false;
+
+// ========== SIDEBAR RENDER ==========
+function renderSidebar() {
+  const sidebar = document.getElementById('sidebar');
+  let html = `
+    <div class="sidebar-header">
+      <h1>BIDMC Liver Transplant App</h1>
+      <p>Screen Generator \u2022 ${screens.length} screens</p>
+    </div>
+  `;
+  let currentSection = '';
+  screens.forEach((s, i) => {
+    if (s.section !== currentSection) {
+      currentSection = s.section;
+      html += `<div class="sidebar-section"><div class="sidebar-section-title">${currentSection}</div>`;
+    }
+    const dotClass = s.status === 'existing' ? 'existing' : s.status === 'done' ? 'done' : 'pending';
+    const badgeClass = s.status === 'existing' ? 'built' : 'new';
+    const badgeText = s.status === 'existing' ? 'BUILT' : 'NEW';
+    html += `
+      <div class="sidebar-item ${i === currentScreenIndex ? 'active' : ''}" onclick="goToIndex(${i})">
+        <div class="dot ${dotClass}"></div>
+        <div class="label">${s.title}</div>
+        <div class="badge ${badgeClass}">${badgeText}</div>
+      </div>
+    `;
+  });
+  html += '</div>';
+  sidebar.innerHTML = html;
+}
+
+// ========== SCREEN RENDER ==========
+function renderScreen() {
+  const screen = screens[currentScreenIndex];
+  document.getElementById('screenContent').innerHTML = screen.render();
+  document.getElementById('toolbarTitle').textContent = `${screen.title} (${currentScreenIndex + 1}/${screens.length})`;
+  renderSidebar();
+  if (codePanelVisible) updateCodePanel();
+  document.getElementById('screenContent').scrollTop = 0;
+}
+
+// ========== NAVIGATION ==========
+function goTo(id) {
+  const idx = screens.findIndex(s => s.id === id);
+  if (idx !== -1) { currentScreenIndex = idx; renderScreen(); }
+}
+function goToIndex(i) { currentScreenIndex = i; renderScreen(); }
+function nextScreen() { if (currentScreenIndex < screens.length - 1) { currentScreenIndex++; renderScreen(); } }
+function prevScreen() { if (currentScreenIndex > 0) { currentScreenIndex--; renderScreen(); } }
+
+// ========== ACCORDION ==========
+function toggleAccordion(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('.accordion-chevron');
+  body.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+
+// ========== CONDITION INFO (indications screen) ==========
+function showCondition(el, name, desc) {
+  document.querySelectorAll('.screen-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  const info = document.getElementById('conditionInfo');
+  if (info) {
+    info.style.display = 'block';
+    info.innerHTML = `<h4>${name}</h4><p>${desc}</p>`;
+  }
+}
+
+// ========== CODE PANEL ==========
+function toggleCodePanel() {
+  codePanelVisible = !codePanelVisible;
+  document.getElementById('codePanel').classList.toggle('visible', codePanelVisible);
+  if (codePanelVisible) updateCodePanel();
+}
+
+function updateCodePanel() {
+  const screen = screens[currentScreenIndex];
+  const html = screen.render();
+  const escaped = html.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  document.getElementById('codeBody').innerHTML = escaped;
+}
+
+function copyCode() {
+  const screen = screens[currentScreenIndex];
+  const code = screen.render();
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = document.querySelector('.copy-btn');
+    btn.textContent = 'Copied!';
+    setTimeout(() => btn.textContent = 'Copy', 1500);
+  });
+}
+
+// ========== EXPORT ==========
+function exportCurrentScreen() {
+  const screen = screens[currentScreenIndex];
+  const fullHtml = generateExportHtml(screen.title, screen.render());
+  downloadFile(`${screen.id}.html`, fullHtml);
+}
+
+function exportAllScreens() {
+  screens.forEach(screen => {
+    const fullHtml = generateExportHtml(screen.title, screen.render());
+    downloadFile(`${screen.id}.html`, fullHtml);
+  });
+}
+
+function generateExportHtml(title, content) {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>${title} - BIDMC Liver Transplant</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Helvetica Neue', Arial, sans-serif; background: #fff; color: #1a1a1a; max-width: 430px; margin: 0 auto; }
+:root { --navy-dark: #1B3A5C; --navy-mid: #234B73; --navy-light: #2E6B9C; --teal-btn: #2196A4; --orange-accent: #E8903E; --gray-100: #F1F3F5; --gray-200: #E9ECEF; --gray-300: #DEE2E6; --gray-500: #868E96; --gray-700: #495057; }
+.screen-nav { background: linear-gradient(135deg, var(--navy-dark), var(--navy-mid)); padding: 14px 16px; display: flex; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 5; }
+.screen-nav .back-arrow { color: white; font-size: 20px; cursor: pointer; width: 28px; height: 28px; display: flex; align-items: center; justify-content: center; }
+.screen-nav .nav-title { color: white; font-size: 15px; font-weight: 600; flex: 1; text-align: center; padding-right: 28px; }
+.screen-breadcrumb { padding: 12px 20px 0; font-size: 12px; color: var(--gray-500); }
+.screen-title { padding: 8px 20px 16px; font-size: 24px; font-weight: 700; color: #1a1a1a; line-height: 1.25; }
+.screen-image { margin: 0 20px 16px; background: linear-gradient(135deg, #2c3e50, #34495e); border-radius: 12px; height: 180px; display: flex; align-items: center; justify-content: center; }
+.screen-image .placeholder-text { color: rgba(255,255,255,0.5); font-size: 13px; text-align: center; padding: 20px; }
+.screen-body { padding: 0 20px 16px; font-size: 15px; line-height: 1.6; }
+.screen-body p { margin-bottom: 12px; }
+.screen-bullets { padding: 0 20px 16px; list-style: none; }
+.screen-bullets li { position: relative; padding-left: 20px; margin-bottom: 10px; font-size: 14px; line-height: 1.5; }
+.screen-bullets li::before { content: '\\2022'; position: absolute; left: 4px; top: 0; color: var(--navy-mid); font-size: 18px; font-weight: 700; }
+.screen-tabs { padding: 0 16px 16px; display: flex; flex-direction: column; gap: 6px; }
+.screen-tab { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--gray-100); border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; }
+.screen-tab.active { background: var(--navy-dark); color: white; }
+.screen-info-card { margin: 0 16px 16px; background: linear-gradient(135deg, var(--navy-dark), #1e3a5f); border-radius: 12px; padding: 20px; color: white; }
+.screen-info-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 10px; }
+.screen-info-card h5 { font-size: 13px; font-weight: 700; margin-top: 12px; margin-bottom: 6px; color: var(--orange-accent); }
+.screen-info-card p { font-size: 13px; line-height: 1.5; color: rgba(255,255,255,0.85); margin-bottom: 8px; }
+.screen-accordion { margin: 0 16px 16px; background: var(--gray-100); border-radius: 12px; overflow: hidden; }
+.accordion-item { border-bottom: 1px solid var(--gray-200); }
+.accordion-item:last-child { border-bottom: none; }
+.accordion-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; cursor: pointer; font-size: 14px; font-weight: 600; }
+.accordion-chevron { width: 28px; height: 28px; background: var(--orange-accent); color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+.accordion-body { padding: 0 16px 14px; font-size: 13px; line-height: 1.6; color: var(--gray-700); display: none; }
+.accordion-body.open { display: block; }
+.screen-next { margin: 16px; background: linear-gradient(135deg, #1B4B6C, #2196A4); border-radius: 16px; padding: 24px 20px; text-align: center; }
+.screen-next .next-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(255,255,255,0.6); margin-bottom: 12px; }
+.screen-next .next-btn { display: inline-block; padding: 12px 32px; background: var(--teal-btn); color: white; border-radius: 25px; font-size: 14px; font-weight: 600; cursor: pointer; }
+.screen-next .mark-complete { display: block; margin-top: 12px; font-size: 13px; color: rgba(255,255,255,0.7); text-decoration: underline; cursor: pointer; }
+.screen-subindex { padding: 0 20px 16px; }
+.screen-subindex h4 { font-size: 14px; font-weight: 700; margin-bottom: 10px; }
+.screen-subindex a { display: block; padding: 10px 0; font-size: 14px; color: var(--navy-mid); text-decoration: underline; border-bottom: 1px solid var(--gray-200); cursor: pointer; }
+.screen-video { margin: 0 20px 16px; background: linear-gradient(135deg, #1a2a3a, #2c4050); border-radius: 12px; height: 200px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; }
+.screen-video .play-btn { width: 50px; height: 50px; background: rgba(255,255,255,0.2); border-radius: 50%; display: flex; align-items: center; justify-content: center; color: white; font-size: 20px; }
+.screen-video .video-label { color: rgba(255,255,255,0.6); font-size: 12px; }
+.screen-contact { margin: 0 16px 16px; background: var(--gray-100); border-radius: 12px; padding: 16px; }
+.screen-contact h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+.screen-contact p { font-size: 13px; line-height: 1.6; color: var(--gray-700); }
+.screen-section-heading { padding: 12px 20px; font-size: 16px; font-weight: 700; }
+.screen-table { margin: 0 16px 16px; border-radius: 8px; overflow: hidden; border: 1px solid var(--gray-300); }
+.screen-table table { width: 100%; border-collapse: collapse; }
+.screen-table th { background: var(--navy-dark); color: white; padding: 10px 8px; text-align: left; font-size: 11px; font-weight: 600; }
+.screen-table td { padding: 8px; border-bottom: 1px solid var(--gray-200); font-size: 11px; line-height: 1.4; vertical-align: top; }
+.screen-table tr:nth-child(even) td { background: var(--gray-100); }
+.lang-option { display: flex; align-items: center; gap: 12px; padding: 14px 20px; margin: 0 16px 8px; background: var(--gray-100); border-radius: 8px; font-size: 15px; cursor: pointer; }
+.lang-option .radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid var(--gray-300); display: flex; align-items: center; justify-content: center; }
+.lang-option.selected .radio { border-color: var(--navy-dark); }
+.lang-option.selected .radio::after { content: ''; width: 10px; height: 10px; border-radius: 50%; background: var(--navy-dark); }
+.stage-card { margin: 0 16px 10px; padding: 16px 20px; background: linear-gradient(135deg, var(--navy-dark), var(--navy-mid)); border-radius: 12px; display: flex; align-items: center; gap: 14px; cursor: pointer; }
+.stage-card .stage-num { width: 32px; height: 32px; background: var(--orange-accent); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; color: white; }
+.stage-card .stage-label { color: white; font-size: 14px; font-weight: 500; flex: 1; }
+</style>
+</head>
+<body>
+${content}
+<script>
+function toggleAccordion(header) {
+  const body = header.nextElementSibling;
+  const chevron = header.querySelector('.accordion-chevron');
+  body.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+<\/script>
+</body>
+</html>`;
+}
+
+function downloadFile(filename, content) {
+  const blob = new Blob([content], { type: 'text/html' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ========== KEYBOARD NAV ==========
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'ArrowRight') nextScreen();
+  if (e.key === 'ArrowLeft') prevScreen();
+});
+
+// ========== INIT ==========
+renderScreen();
+</script>
+</body>
+</html>
